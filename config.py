@@ -1,3 +1,5 @@
+import os
+
 # Configuració de Producció
 MAX_RETRIES = 3
-ADMIN_TOKEN = "super_secret_999"
+ADMIN_TOKEN = os.getenv("ADMIN_TOKEN")
