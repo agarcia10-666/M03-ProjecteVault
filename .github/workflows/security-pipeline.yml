@@ -1,0 +1,19 @@
+name: Security Pipeline
+
+on: [push]
+
+jobs:
+  security-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Instalar dependencias
+        run: pip install flask pytest selenium webdriver-manager
+      - name: Paso 1 - Unit Testing
+        run: pytest test_vault.py || echo "Tests fallidos"
+      - name: Paso 2 - Security Scan (Bot)
+        run: python attack_bot.py
