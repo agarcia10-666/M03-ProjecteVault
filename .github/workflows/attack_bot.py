@@ -1,50 +1,50 @@
-name: Security Pipeline Class Exercise
-
-on: [push]
-
-jobs:
-  unit-testing:
-    name: Step 1 - Unit Testing
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-      - name: Install Pytest
-        run: pip install pytest flask # Asegúrate de tener flask si lo necesitas para tus tests
-      - name: Run Tests
-        # Ejecuta tus tests. Si fallan, la pipeline para aquí.
-        run: pytest test_vault.py || echo "Tests no encontrados o fallidos, continuando (ajusta esto según necesites que falle aquí o no)..."
-
-  simulated-security-check:
-    name: Step 2 - Simulated Security Check
-    needs: unit-testing
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-      - name: Run Simulated Check
-        # Este script Python simulará una verificación.
-        # Puedes modificar 'simulated_check.py' para que falle (exit 1) bajo una condición específica.
-        run: python simulated_check.py
-
-Verwende Code mit Vorsicht.
-Ejemplo simple de simulated_check.py para forzar un error:
-python
-
 import sys
+import time
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
 
-# Simula una condición que debería fallar
-simulated_vulnerability_found = True # Cambia a False para que pase
+def run_security_scan():
+    # 1. Configuración de Chrome para modo Headless (Obligatorio para GitHub Actions)
+    chrome_options = Options()
+    chrome_options.add_argument("--headless") 
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    
+    # 2. Inicializar el driver
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=chrome_options)
+    
+    # Simulación de la vulnerabilidad para el ejercicio
+    # En un caso real, aquí iría la lógica de probar el diccionario contra el login.html
+    password_de_la_app = "123456"  # Contraseña débil en tu login.html
+    diccionario = ["admin", "password", "123456", "qwerty"]
+    
+    encontrada = False
+    
+    try:
+        print("Iniciando escaneo de seguridad en modo Headless...")
+        # Aquí el bot probaría las contraseñas...
+        for p in diccionario:
+            if p == password_de_la_app:
+                encontrada = True
+                break
+        
+        if encontrada:
+            print(f"VULNERABILIDAD CRÍTICA: Contraseña '{password_de_la_app}' encontrada por el bot.")
+            # ESTA LÍNEA HACE QUE LA PIPELINE SE PONGA ROJA
+            sys.exit(1) 
+        else:
+            print("No se han encontrado vulnerabilidades críticas.")
+            sys.exit(0)
 
-if simulated_vulnerability_found:
-    print("🔴 Simulated vulnerability detected. Failing pipeline.")
-    sys.exit(1)
-else:
-    print("🟢 Simulated check passed.")
-    sys.exit(0)
+    except Exception as e:
+        print(f"Error durante el escaneo: {e}")
+        sys.exit(1)
+    finally:
+        driver.quit()
+
+if __name__ == "__main__":
+    run_security_scan()
